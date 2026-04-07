@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import sqlite3
 import re
 import unicodedata
+from thefuzz import process
+
+
+
+
 
 conn = sqlite3.connect('/workspaces/moneyball-brasileirao/databases/brasileirao.db')
 
@@ -16,7 +21,13 @@ df_geral = pd.read_csv('/workspaces/moneyball-brasileirao/data/valores_geral.csv
 
 #Funções auxiliares
 
-import unicodedata
+
+
+def padronizar(nome_atual):
+    # Encontra o nome no df3 mais parecido com o nome atual
+    melhor_match, score = process.extractOne(nome_atual, nomes_padrao)
+    return melhor_match if score > 80 else nome_atual
+
 
 def limpar_texto(texto):
     if not isinstance(texto, str):
@@ -114,10 +125,19 @@ df_class_2 = processar_dataframes(df_class_2, 'clube')
 
 lista_df = [df_inicio, df_fim, df_geral_2]
 
+nomes_padrao = df_class_2['clube'].unique()
+
+df_inicio['clube'] = df_inicio['clube'].apply(padronizar)
+df_fim['clube'] = df_fim['clube'].apply(padronizar)
+df_geral_2['clube'] = df_geral_2['clube'].apply(padronizar)
+df_class_2['clube'] = df_class_2['clube'].apply(padronizar)
+
 lista_df_db = {'inicio_ano' : df_inicio,
                'fim_ano' : df_fim,
                'investimento_geral' : df_geral_2,
                'classificacao_final' : df_class_2}
+
+
 for df in lista_df:
     normalizador_numericos(df)
 # carregar tabelas em um sql para fazer analises posteriores
