@@ -1,10 +1,13 @@
+from functools import reduce
+from thefuzz import process
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
 import sqlite3
 import re
 import unicodedata
-from thefuzz import process
 
 
 
@@ -132,11 +135,17 @@ df_fim['clube'] = df_fim['clube'].apply(padronizar)
 df_geral_2['clube'] = df_geral_2['clube'].apply(padronizar)
 df_class_2['clube'] = df_class_2['clube'].apply(padronizar)
 
+
+
 lista_df_db = {'inicio_ano' : df_inicio,
                'fim_ano' : df_fim,
-               'investimento_geral' : df_geral_2,
-               'classificacao_final' : df_class_2}
+               'geral' : df_geral_2,
+               'classificacao_final' : df_class_2,
+               }
 
+df_master = reduce(lambda left, right: pd.merge(left, right, on='clube', how='inner'), lista_df_db.values())
+df_master = normalizador_numericos(df_master)
+df_master.to_sql(name='master', con=conn, if_exists='replace', index=False)
 
 for df in lista_df:
     normalizador_numericos(df)
