@@ -23,8 +23,8 @@ def extract_data():
             tables_classificacao = pd.read_html(url_classificacao)
             df_valores_clubes = tables_valores[1]
             df_class_clubes = tables_classificacao[1]
-            df_valores_clubes.to_csv(f'/workspaces/moneyball-brasileirao/data/dados_clubes_{data}.csv', index = False)
-            df_class_clubes.to_csv(f'/workspaces/moneyball-brasileirao/data/class_clubes_{data}.csv', index = False)
+            df_valores_clubes.to_csv(f'/workspaces/moneyball-brasileirao/data/dados_clubes_{data + 1}.csv', index = False)
+            df_class_clubes.to_csv(f'/workspaces/moneyball-brasileirao/data/class_clubes_{data + 1}.csv', index = False)
         else:
             print(f"Failed to retrieve data for {data}. Status code: {response_valores.status_code} for valores, {response_classificacao.status_code} for classificacao.")
         

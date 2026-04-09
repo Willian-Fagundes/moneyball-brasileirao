@@ -29,6 +29,12 @@ def remove_null(df):
     df = df.dropna(axis = 1, how = 'all')
     return df
 
+
+def remove_null_class(df):
+    df = df.drop(df.columns[0], axis=1)
+    df = df.dropna(axis = 1, how = 'all')
+    return df
+
 def limpar_texto(texto):
     if not isinstance(texto, str):
         return str(texto)
@@ -75,32 +81,34 @@ def salvar_db(dfs):
 
 def padronizar(nome_atual, nomes_padrao):
     melhor_match, score = process.extractOne(nome_atual, nomes_padrao)
-    return melhor_match if score > 80 else nome_atual
+    return melhor_match if score > 75 else nome_atual
 
 def pipeline_tratamento(data_inicio, data_fim):
     for data in range(data_inicio, data_fim + 1):
         data_class = abrir_csv(f'/workspaces/moneyball-brasileirao/data/class_clubes_{data}.csv')
         data_clubes = abrir_csv(f'/workspaces/moneyball-brasileirao/data/dados_clubes_{data}.csv')
 
-        data_class = remove_null(data_class)
+        data_class = remove_null_class(data_class)
         data_clubes = remove_null(data_clubes)
 
         data_class = rename_class_clubes(data_class)
         data_clubes = rename_dados_clubes(data_clubes)
 
-        data_class = processar_dataframes(data_class, 'clube')
-        data_clubes = processar_dataframes(data_clubes, 'clube')
-
         data_class[['gols_pro', 'gols_contra']] = (
             data_class['gols'].str.split(':', expand=True).astype(int)
         )
         data_class = data_class.drop(columns=['gols'])
+        
+        data_clubes['clube'] = data_clubes['clube'].replace('Clube Atlético Paranaense', 'atleticopr')
 
-       
         nomes_padrao = data_class['clube'].tolist()
+
         data_clubes['clube'] = data_clubes['clube'].apply(
             lambda nome: padronizar(nome, nomes_padrao)
         )
+
+        data_class = processar_dataframes(data_class, 'clube')
+        data_clubes = processar_dataframes(data_clubes, 'clube')
 
         data_clubes = normalizador_numericos(data_clubes)
 
@@ -108,8 +116,8 @@ def pipeline_tratamento(data_inicio, data_fim):
             f'dados_clubes_{data}': data_clubes,
             f'dados_class_{data}': data_class,
         }
-
+        
         salvar_db(lista_df_db)
 
 if __name__ == "__main__":
-    pipeline_tratamento(2015, 2025)
+    pipeline_tratamento(2016, 2026)
